@@ -137,6 +137,9 @@ isOp(const char *val)
 	return true;
 }
 
+PgQueryDeparseResult pg_query_csharp_deparse(PgQueryProtobuf tree);
+
+static void deparseNode(StringInfo str, Node *node);
 static void deparseSelectStmt(StringInfo str, SelectStmt *stmt);
 static void deparseIntoClause(StringInfo str, IntoClause *into_clause);
 static void deparseRangeVar(StringInfo str, RangeVar *range_var, DeparseNodeContext context);
@@ -10648,3 +10651,546 @@ void pg_query_free_deparse_result(PgQueryDeparseResult result)
 
 	free(result.query);
 }
+
+//region deparse_csharp
+PgQueryDeparseResult pg_query_csharp_deparse(PgQueryProtobuf tree) {
+    PgQueryDeparseResult result = {0};
+    StringInfoData str;
+    MemoryContext ctx;
+    List *stmts;
+
+    ctx = pg_query_enter_memory_context();
+
+    PG_TRY();
+    {
+        stmts = pg_query_protobuf_to_nodes(tree);
+        initStringInfo(&str);
+
+        if (stmts->elements)
+            deparseNode(&str, (Node *) stmts->elements->ptr_value);
+
+        result.query = strdup(str.data);
+    }
+    PG_CATCH();
+    {
+        ErrorData *error_data;
+        PgQueryError *error;
+
+        MemoryContextSwitchTo(ctx);
+        error_data = CopyErrorData();
+
+        error = malloc(sizeof(PgQueryError));
+        error->message = strdup(error_data->message);
+        error->filename = strdup(error_data->filename);
+        error->funcname = strdup(error_data->funcname);
+        error->context = NULL;
+        error->lineno = error_data->lineno;
+        error->cursorpos = error_data->cursorpos;
+
+        result.error = error;
+        FlushErrorState();
+    }
+    PG_END_TRY();
+
+    pg_query_exit_memory_context(ctx);
+
+    return result;
+}
+
+static void deparseNode(StringInfo str, Node *node) {
+    switch (node->type) {
+        //region Statement
+
+        case T_RawStmt:
+            deparseRawStmt(str, castNode(RawStmt, node));
+            break;
+        case T_AlterEventTrigStmt:
+            deparseAlterEventTrigStmt(str, castNode(AlterEventTrigStmt, node));
+            break;
+        case T_AlterCollationStmt:
+            deparseAlterCollationStmt(str, castNode(AlterCollationStmt, node));
+            break;
+        case T_AlterDatabaseStmt:
+            deparseAlterDatabaseStmt(str, castNode(AlterDatabaseStmt, node));
+            break;
+        case T_AlterDatabaseSetStmt:
+            deparseAlterDatabaseSetStmt(str, castNode(AlterDatabaseSetStmt, node));
+            break;
+        case T_AlterDefaultPrivilegesStmt:
+            deparseAlterDefaultPrivilegesStmt(str, castNode(AlterDefaultPrivilegesStmt, node));
+            break;
+        case T_AlterDomainStmt:
+            deparseAlterDomainStmt(str, castNode(AlterDomainStmt, node));
+            break;
+        case T_AlterEnumStmt:
+            deparseAlterEnumStmt(str, castNode(AlterEnumStmt, node));
+            break;
+        case T_AlterExtensionStmt:
+            deparseAlterExtensionStmt(str, castNode(AlterExtensionStmt, node));
+            break;
+        case T_AlterExtensionContentsStmt:
+            deparseAlterExtensionContentsStmt(str, castNode(AlterExtensionContentsStmt, node));
+            break;
+        case T_AlterFdwStmt:
+            deparseAlterFdwStmt(str, castNode(AlterFdwStmt, node));
+            break;
+        case T_AlterForeignServerStmt:
+            deparseAlterForeignServerStmt(str, castNode(AlterForeignServerStmt, node));
+            break;
+        case T_AlterFunctionStmt:
+            deparseAlterFunctionStmt(str, castNode(AlterFunctionStmt, node));
+            break;
+        case T_AlterObjectDependsStmt:
+            deparseAlterObjectDependsStmt(str, castNode(AlterObjectDependsStmt, node));
+            break;
+        case T_AlterObjectSchemaStmt:
+            deparseAlterObjectSchemaStmt(str, castNode(AlterObjectSchemaStmt, node));
+            break;
+        case T_AlterOwnerStmt:
+            deparseAlterOwnerStmt(str, castNode(AlterOwnerStmt, node));
+            break;
+        case T_AlterOperatorStmt:
+            deparseAlterOperatorStmt(str, castNode(AlterOperatorStmt, node));
+            break;
+        case T_AlterTypeStmt:
+            deparseAlterTypeStmt(str, castNode(AlterTypeStmt, node));
+            break;
+        case T_AlterPolicyStmt:
+            deparseAlterPolicyStmt(str, castNode(AlterPolicyStmt, node));
+            break;
+        case T_AlterSeqStmt:
+            deparseAlterSeqStmt(str, castNode(AlterSeqStmt, node));
+            break;
+        case T_AlterSystemStmt:
+            deparseAlterSystemStmt(str, castNode(AlterSystemStmt, node));
+            break;
+        case T_AlterTableMoveAllStmt:
+            deparseAlterTableMoveAllStmt(str, castNode(AlterTableMoveAllStmt, node));
+            break;
+        case T_AlterTableStmt:
+            deparseAlterTableStmt(str, castNode(AlterTableStmt, node));
+            break;
+        case T_AlterTableSpaceOptionsStmt: // "AlterTblSpcStmt" in gram.y
+            deparseAlterTableSpaceOptionsStmt(str, castNode(AlterTableSpaceOptionsStmt, node));
+            break;
+        case T_AlterPublicationStmt:
+            deparseAlterPublicationStmt(str, castNode(AlterPublicationStmt, node));
+            break;
+        case T_AlterRoleSetStmt:
+            deparseAlterRoleSetStmt(str, castNode(AlterRoleSetStmt, node));
+            break;
+        case T_AlterRoleStmt:
+            deparseAlterRoleStmt(str, castNode(AlterRoleStmt, node));
+            break;
+        case T_AlterSubscriptionStmt:
+            deparseAlterSubscriptionStmt(str, castNode(AlterSubscriptionStmt, node));
+            break;
+        case T_AlterStatsStmt:
+            deparseAlterStatsStmt(str, castNode(AlterStatsStmt, node));
+            break;
+        case T_AlterTSConfigurationStmt:
+            deparseAlterTSConfigurationStmt(str, castNode(AlterTSConfigurationStmt, node));
+            break;
+        case T_AlterTSDictionaryStmt:
+            deparseAlterTSDictionaryStmt(str, castNode(AlterTSDictionaryStmt, node));
+            break;
+        case T_AlterUserMappingStmt:
+            deparseAlterUserMappingStmt(str, castNode(AlterUserMappingStmt, node));
+            break;
+        case T_CallStmt:
+            deparseCallStmt(str, castNode(CallStmt, node));
+            break;
+        case T_CheckPointStmt:
+            deparseCheckPointStmt(str, castNode(CheckPointStmt, node));
+            break;
+        case T_ClosePortalStmt:
+            deparseClosePortalStmt(str, castNode(ClosePortalStmt, node));
+            break;
+        case T_ClusterStmt:
+            deparseClusterStmt(str, castNode(ClusterStmt, node));
+            break;
+        case T_CommentStmt:
+            deparseCommentStmt(str, castNode(CommentStmt, node));
+            break;
+        case T_ConstraintsSetStmt:
+            deparseConstraintsSetStmt(str, castNode(ConstraintsSetStmt, node));
+            break;
+        case T_CopyStmt:
+            deparseCopyStmt(str, castNode(CopyStmt, node));
+            break;
+        case T_CreateAmStmt:
+            deparseCreateAmStmt(str, castNode(CreateAmStmt, node));
+            break;
+        case T_CreateTableAsStmt: // "CreateAsStmt" in gram.y
+            deparseCreateTableAsStmt(str, castNode(CreateTableAsStmt, node));
+            break;
+        case T_CreateCastStmt:
+            deparseCreateCastStmt(str, castNode(CreateCastStmt, node));
+            break;
+        case T_CreateConversionStmt:
+            deparseCreateConversionStmt(str, castNode(CreateConversionStmt, node));
+            break;
+        case T_CreateDomainStmt:
+            deparseCreateDomainStmt(str, castNode(CreateDomainStmt, node));
+            break;
+        case T_CreateExtensionStmt:
+            deparseCreateExtensionStmt(str, castNode(CreateExtensionStmt, node));
+            break;
+        case T_CreateFdwStmt:
+            deparseCreateFdwStmt(str, castNode(CreateFdwStmt, node));
+            break;
+        case T_CreateForeignServerStmt:
+            deparseCreateForeignServerStmt(str, castNode(CreateForeignServerStmt, node));
+            break;
+        case T_CreateForeignTableStmt:
+            deparseCreateForeignTableStmt(str, castNode(CreateForeignTableStmt, node));
+            break;
+        case T_CreateFunctionStmt:
+            deparseCreateFunctionStmt(str, castNode(CreateFunctionStmt, node));
+            break;
+        case T_CreateOpClassStmt:
+            deparseCreateOpClassStmt(str, castNode(CreateOpClassStmt, node));
+            break;
+        case T_CreateOpFamilyStmt:
+            deparseCreateOpFamilyStmt(str, castNode(CreateOpFamilyStmt, node));
+            break;
+        case T_CreatePublicationStmt:
+            deparseCreatePublicationStmt(str, castNode(CreatePublicationStmt, node));
+            break;
+        case T_AlterOpFamilyStmt:
+            deparseAlterOpFamilyStmt(str, castNode(AlterOpFamilyStmt, node));
+            break;
+        case T_CreatePolicyStmt:
+            deparseCreatePolicyStmt(str, castNode(CreatePolicyStmt, node));
+            break;
+        case T_CreatePLangStmt:
+            deparseCreatePLangStmt(str, castNode(CreatePLangStmt, node));
+            break;
+        case T_CreateSchemaStmt:
+            deparseCreateSchemaStmt(str, castNode(CreateSchemaStmt, node));
+            break;
+        case T_CreateSeqStmt:
+            deparseCreateSeqStmt(str, castNode(CreateSeqStmt, node));
+            break;
+        case T_CreateStmt:
+            deparseCreateStmt(str, castNode(CreateStmt, node), false);
+            break;
+        case T_CreateSubscriptionStmt:
+            deparseCreateSubscriptionStmt(str, castNode(CreateSubscriptionStmt, node));
+            break;
+        case T_CreateStatsStmt:
+            deparseCreateStatsStmt(str, castNode(CreateStatsStmt, node));
+            break;
+        case T_CreateTableSpaceStmt:
+            deparseCreateTableSpaceStmt(str, castNode(CreateTableSpaceStmt, node));
+            break;
+        case T_CreateTransformStmt:
+            deparseCreateTransformStmt(str, castNode(CreateTransformStmt, node));
+            break;
+        case T_CreateTrigStmt:
+            deparseCreateTrigStmt(str, castNode(CreateTrigStmt, node));
+            break;
+        case T_CreateEventTrigStmt:
+            deparseCreateEventTrigStmt(str, castNode(CreateEventTrigStmt, node));
+            break;
+        case T_CreateRoleStmt:
+            deparseCreateRoleStmt(str, castNode(CreateRoleStmt, node));
+            break;
+        case T_CreateUserMappingStmt:
+            deparseCreateUserMappingStmt(str, castNode(CreateUserMappingStmt, node));
+            break;
+        case T_CreatedbStmt:
+            deparseCreatedbStmt(str, castNode(CreatedbStmt, node));
+            break;
+        case T_DeallocateStmt:
+            deparseDeallocateStmt(str, castNode(DeallocateStmt, node));
+            break;
+        case T_DeclareCursorStmt:
+            deparseDeclareCursorStmt(str, castNode(DeclareCursorStmt, node));
+            break;
+        case T_DefineStmt:
+            deparseDefineStmt(str, castNode(DefineStmt, node));
+            break;
+        case T_DeleteStmt:
+            deparseDeleteStmt(str, castNode(DeleteStmt, node));
+            break;
+        case T_DiscardStmt:
+            deparseDiscardStmt(str, castNode(DiscardStmt, node));
+            break;
+        case T_DoStmt:
+            deparseDoStmt(str, castNode(DoStmt, node));
+            break;
+        case T_DropOwnedStmt:
+            deparseDropOwnedStmt(str, castNode(DropOwnedStmt, node));
+            break;
+        case T_DropStmt:
+            deparseDropStmt(str, castNode(DropStmt, node));
+            break;
+        case T_DropSubscriptionStmt:
+            deparseDropSubscriptionStmt(str, castNode(DropSubscriptionStmt, node));
+            break;
+        case T_DropTableSpaceStmt:
+            deparseDropTableSpaceStmt(str, castNode(DropTableSpaceStmt, node));
+            break;
+        case T_DropRoleStmt:
+            deparseDropRoleStmt(str, castNode(DropRoleStmt, node));
+            break;
+        case T_DropUserMappingStmt:
+            deparseDropUserMappingStmt(str, castNode(DropUserMappingStmt, node));
+            break;
+        case T_DropdbStmt:
+            deparseDropdbStmt(str, castNode(DropdbStmt, node));
+            break;
+        case T_ExecuteStmt:
+            deparseExecuteStmt(str, castNode(ExecuteStmt, node));
+            break;
+        case T_ExplainStmt:
+            deparseExplainStmt(str, castNode(ExplainStmt, node));
+            break;
+        case T_FetchStmt:
+            deparseFetchStmt(str, castNode(FetchStmt, node));
+            break;
+        case T_GrantStmt:
+            deparseGrantStmt(str, castNode(GrantStmt, node));
+            break;
+        case T_GrantRoleStmt:
+            deparseGrantRoleStmt(str, castNode(GrantRoleStmt, node));
+            break;
+        case T_ImportForeignSchemaStmt:
+            deparseImportForeignSchemaStmt(str, castNode(ImportForeignSchemaStmt, node));
+            break;
+        case T_IndexStmt:
+            deparseIndexStmt(str, castNode(IndexStmt, node));
+            break;
+        case T_InsertStmt:
+            deparseInsertStmt(str, castNode(InsertStmt, node));
+            break;
+        case T_ListenStmt:
+            deparseListenStmt(str, castNode(ListenStmt, node));
+            break;
+        case T_RefreshMatViewStmt:
+            deparseRefreshMatViewStmt(str, castNode(RefreshMatViewStmt, node));
+            break;
+        case T_LoadStmt:
+            deparseLoadStmt(str, castNode(LoadStmt, node));
+            break;
+        case T_LockStmt:
+            deparseLockStmt(str, castNode(LockStmt, node));
+            break;
+        case T_MergeStmt:
+            deparseMergeStmt(str, castNode(MergeStmt, node));
+            break;
+        case T_NotifyStmt:
+            deparseNotifyStmt(str, castNode(NotifyStmt, node));
+            break;
+        case T_PrepareStmt:
+            deparsePrepareStmt(str, castNode(PrepareStmt, node));
+            break;
+        case T_ReassignOwnedStmt:
+            deparseReassignOwnedStmt(str, castNode(ReassignOwnedStmt, node));
+            break;
+        case T_ReindexStmt:
+            deparseReindexStmt(str, castNode(ReindexStmt, node));
+            break;
+        case T_RenameStmt:
+            deparseRenameStmt(str, castNode(RenameStmt, node));
+            break;
+        case T_RuleStmt:
+            deparseRuleStmt(str, castNode(RuleStmt, node));
+            break;
+        case T_SecLabelStmt:
+            deparseSecLabelStmt(str, castNode(SecLabelStmt, node));
+            break;
+        case T_SelectStmt:
+            deparseSelectStmt(str, castNode(SelectStmt, node));
+            break;
+        case T_TransactionStmt:
+            deparseTransactionStmt(str, castNode(TransactionStmt, node));
+            break;
+        case T_TruncateStmt:
+            deparseTruncateStmt(str, castNode(TruncateStmt, node));
+            break;
+        case T_UnlistenStmt:
+            deparseUnlistenStmt(str, castNode(UnlistenStmt, node));
+            break;
+        case T_UpdateStmt:
+            deparseUpdateStmt(str, castNode(UpdateStmt, node));
+            break;
+        case T_VacuumStmt:
+            deparseVacuumStmt(str, castNode(VacuumStmt, node));
+            break;
+        case T_VariableSetStmt:
+            deparseVariableSetStmt(str, castNode(VariableSetStmt, node));
+            break;
+        case T_VariableShowStmt:
+            deparseVariableShowStmt(str, castNode(VariableShowStmt, node));
+            break;
+        case T_ViewStmt:
+            deparseViewStmt(str, castNode(ViewStmt, node));
+            break;
+            // These node types are created by DefineStmt grammar for CREATE TYPE in some cases
+        case T_CompositeTypeStmt:
+            deparseCompositeTypeStmt(str, castNode(CompositeTypeStmt, node));
+            break;
+        case T_CreateEnumStmt:
+            deparseCreateEnumStmt(str, castNode(CreateEnumStmt, node));
+            break;
+        case T_CreateRangeStmt:
+            deparseCreateRangeStmt(str, castNode(CreateRangeStmt, node));
+            break;
+            //endregion
+
+        case T_IntoClause:
+            deparseIntoClause(str, castNode(IntoClause, node));
+            break;
+        case T_RangeVar:
+            deparseRangeVar(str, castNode(RangeVar, node), DEPARSE_NODE_CONTEXT_NONE);
+            break;
+        case T_Alias:
+            deparseAlias(str, castNode(Alias, node));
+            break;
+        case T_WindowDef:
+            deparseWindowDef(str, castNode(WindowDef, node));
+            break;
+        case T_ColumnRef:
+            deparseColumnRef(str, castNode(ColumnRef, node));
+            break;
+        case T_SubLink:
+            deparseSubLink(str, castNode(SubLink, node));
+            break;
+        case T_A_Expr:
+            deparseAExpr(str, castNode(A_Expr, node), DEPARSE_NODE_CONTEXT_NONE);
+            break;
+        case T_BoolExpr:
+            deparseBoolExpr(str, castNode(BoolExpr, node));
+            break;
+        case T_A_Star:
+            deparseAStar(str, castNode(A_Star, node));
+            break;
+        case T_CollateClause:
+            deparseCollateClause(str, castNode(CollateClause, node));
+            break;
+        case T_SortBy:
+            deparseSortBy(str, castNode(SortBy, node));
+            break;
+        case T_ParamRef:
+            deparseParamRef(str, castNode(ParamRef, node));
+            break;
+        case T_SQLValueFunction:
+            deparseSQLValueFunction(str, castNode(SQLValueFunction, node));
+            break;
+        case T_WithClause:
+            deparseWithClause(str, castNode(WithClause, node));
+            break;
+        case T_JoinExpr:
+            deparseJoinExpr(str, castNode(JoinExpr, node));
+            break;
+        case T_CommonTableExpr:
+            deparseCommonTableExpr(str, castNode(CommonTableExpr, node));
+            break;
+        case T_RangeSubselect:
+            deparseRangeSubselect(str, castNode(RangeSubselect, node));
+            break;
+        case T_RangeFunction:
+            deparseRangeFunction(str, castNode(RangeFunction, node));
+            break;
+        case T_A_ArrayExpr:
+            deparseAArrayExpr(str, castNode(A_ArrayExpr, node));
+            break;
+        case T_RowExpr:
+            deparseRowExpr(str, castNode(RowExpr, node));
+            break;
+        case T_TypeCast:
+            deparseTypeCast(str, castNode(TypeCast, node));
+            break;
+        case T_TypeName:
+            deparseTypeName(str, castNode(TypeName, node));
+            break;
+        case T_NullTest:
+            deparseNullTest(str, castNode(NullTest, node));
+            break;
+        case T_CaseExpr:
+            deparseCaseExpr(str, castNode(CaseExpr, node));
+            break;
+        case T_CaseWhen:
+            deparseCaseWhen(str, castNode(CaseWhen, node));
+            break;
+        case T_A_Indirection:
+            deparseAIndirection(str, castNode(A_Indirection, node));
+            break;
+        case T_A_Indices:
+            deparseAIndices(str, castNode(A_Indices, node));
+            break;
+        case T_CoalesceExpr:
+            deparseCoalesceExpr(str, castNode(CoalesceExpr, node));
+            break;
+        case T_BooleanTest:
+            deparseBooleanTest(str, castNode(BooleanTest, node));
+            break;
+        case T_ColumnDef:
+            deparseColumnDef(str, castNode(ColumnDef, node));
+            break;
+        case T_OnConflictClause:
+            deparseOnConflictClause(str, castNode(OnConflictClause, node));
+            break;
+        case T_IndexElem:
+            deparseIndexElem(str, castNode(IndexElem, node));
+            break;
+        case T_LockingClause:
+            deparseLockingClause(str, castNode(LockingClause, node));
+            break;
+        case T_SetToDefault:
+            deparseSetToDefault(str, castNode(SetToDefault, node));
+            break;
+        case T_FunctionParameter:
+            deparseFunctionParameter(str, castNode(FunctionParameter, node));
+            break;
+        case T_RoleSpec:
+            deparseRoleSpec(str, castNode(RoleSpec, node));
+            break;
+        case T_RangeTableSample:
+            deparseRangeTableSample(str, castNode(RangeTableSample, node));
+            break;
+        case T_RangeTableFunc:
+            deparseRangeTableFunc(str, castNode(RangeTableFunc, node));
+            break;
+        case T_GroupingSet:
+            deparseGroupingSet(str, castNode(GroupingSet, node));
+            break;
+        case T_FuncCall:
+            deparseFuncCall(str, castNode(FuncCall, node));
+            break;
+        case T_MinMaxExpr:
+            deparseMinMaxExpr(str, castNode(MinMaxExpr, node));
+            break;
+        case T_XmlExpr:
+            deparseXmlExpr(str, castNode(XmlExpr, node));
+            break;
+        case T_XmlSerialize:
+            deparseXmlSerialize(str, castNode(XmlSerialize, node));
+            break;
+        case T_Constraint:
+            deparseConstraint(str, castNode(Constraint, node));
+            break;
+        case T_TriggerTransition:
+            deparseTriggerTransition(str, castNode(TriggerTransition, node));
+            break;
+        case T_CreateOpClassItem:
+            deparseCreateOpClassItem(str, castNode(CreateOpClassItem, node));
+            break;
+        case T_A_Const:
+            deparseAConst(str, castNode(A_Const, node));
+            break;
+        case T_CurrentOfExpr:
+            deparseCurrentOfExpr(str, castNode(CurrentOfExpr, node));
+            break;
+        case T_GroupingFunc:
+            deparseGroupingFunc(str, castNode(GroupingFunc, node));
+            break;
+
+        default:
+            elog(ERROR, "deparse: unsupported node type: %u", nodeTag(node));
+    }
+}
+
+//endregion
