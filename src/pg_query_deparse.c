@@ -10667,7 +10667,7 @@ PgQueryDeparseResult pg_query_csharp_deparse(PgQueryProtobuf tree) {
         initStringInfo(&str);
 
         if (stmts->elements)
-            deparseNode(&str, (Node *) stmts->elements->ptr_value);
+            deparseNode(&str, ((RawStmt*) stmts->elements->ptr_value)->stmt);
 
         result.query = strdup(str.data);
     }
