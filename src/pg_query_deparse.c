@@ -109,7 +109,7 @@ isOp(const char *val)
 {
 	const char *cp;
 
-	Assert(strlen(val) > 0);
+	DeparseAssert(strlen(val) > 0);
 
 	for (cp = val; *cp; cp++)
 	{
@@ -216,7 +216,7 @@ static void deparseAnyName(StringInfo str, List *parts)
 
 	foreach(lc, parts)
 	{
-		Assert(IsA(lfirst(lc), String));
+		DeparseAssert(IsA(lfirst(lc), String));
 		appendStringInfoString(str, quote_identifier(strVal(lfirst(lc))));
 		if (lnext(parts, lc))
 			appendStringInfoChar(str, '.');
@@ -228,7 +228,7 @@ static void deparseAnyNameSkipFirst(StringInfo str, List *parts)
 
 	for_each_from(lc, parts, 1)
 	{
-		Assert(IsA(lfirst(lc), String));
+		DeparseAssert(IsA(lfirst(lc), String));
 		appendStringInfoString(str, quote_identifier(strVal(lfirst(lc))));
 		if (lnext(parts, lc))
 			appendStringInfoChar(str, '.');
@@ -438,7 +438,7 @@ static void deparseOptIndirection(StringInfo str, List *indirection, int N)
 		else
 		{
 			// No other nodes should appear here
-			Assert(false);
+			DeparseAssert(false);
 		}
 	}
 }
@@ -475,7 +475,7 @@ static void deparseNumericOnly(StringInfo str, union ValUnion *value)
 			appendStringInfoString(str, value->sval.sval);
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -564,7 +564,7 @@ static void deparseSeqOptElem(StringInfo str, DefElem *def_elem)
 	}
 	else
 	{
-		Assert(false);
+		DeparseAssert(false);
 	}
 }
 
@@ -572,7 +572,7 @@ static void deparseSeqOptElem(StringInfo str, DefElem *def_elem)
 static void deparseSeqOptList(StringInfo str, List *options)
 {
 	ListCell *lc;
-	Assert(list_length(options) > 0);
+	DeparseAssert(list_length(options) > 0);
 	foreach (lc, options)
 	{
 		deparseSeqOptElem(str, castNode(DefElem, lfirst(lc)));
@@ -615,7 +615,7 @@ static void deparseOptDropBehavior(StringInfo str, DropBehavior behavior)
 // "any_operator" in gram.y
 static void deparseAnyOperator(StringInfo str, List *op)
 {
-	Assert(isOp(strVal(llast(op))));
+	DeparseAssert(isOp(strVal(llast(op))));
 	if (list_length(op) == 2)
 	{
 		appendStringInfoString(str, quote_identifier(strVal(linitial(op))));
@@ -628,7 +628,7 @@ static void deparseAnyOperator(StringInfo str, List *op)
 	}
 	else
 	{
-		Assert(false);
+		DeparseAssert(false);
 	}
 }
 
@@ -681,7 +681,7 @@ static void deparseSubqueryOp(StringInfo str, List *op)
 // Not present directly in gram.y (usually matched by ColLabel)
 static void deparseGenericDefElemName(StringInfo str, const char *in)
 {
-	Assert(in != NULL);
+	DeparseAssert(in != NULL);
 	char *val = pstrdup(in);
 	for (unsigned char *p = (unsigned char *) val; *p; p++)
 		*p = pg_toupper(*p);
@@ -699,7 +699,7 @@ static void deparseDefArg(StringInfo str, Node *arg, bool is_operator_def_arg)
 	else if (IsA(arg, List)) // qual_all_Op
 	{
 		List *l = castNode(List, arg);
-		Assert(list_length(l) == 1 || list_length(l) == 2);
+		DeparseAssert(list_length(l) == 1 || list_length(l) == 2);
 
 		// Schema qualified operator
 		if (list_length(l) == 2)
@@ -735,7 +735,7 @@ static void deparseDefArg(StringInfo str, Node *arg, bool is_operator_def_arg)
 	}
 	else 
 	{
-		Assert(false);
+		DeparseAssert(false);
 	}
 }
 
@@ -858,7 +858,7 @@ static void deparseCommonFuncOptItem(StringInfo str, DefElem *def_elem)
 	}
 	else
 	{
-		Assert(false);
+		DeparseAssert(false);
 	}
 }
 
@@ -1037,7 +1037,7 @@ static void deparseOperatorWithArgtypes(StringInfo str, ObjectWithArgs *object_w
 {
 	deparseAnyOperator(str, object_with_args->objname);
 
-	Assert(list_length(object_with_args->objargs) == 2);
+	DeparseAssert(list_length(object_with_args->objargs) == 2);
 	appendStringInfoChar(str, '(');
 	if (linitial(object_with_args->objargs) == NULL)
 		appendStringInfoString(str, "NONE");
@@ -1054,7 +1054,7 @@ static void deparseOperatorWithArgtypes(StringInfo str, ObjectWithArgs *object_w
 // "aggr_args" in gram.y
 static void deparseAggrArgs(StringInfo str, List *aggr_args)
 {
-	Assert(list_length(aggr_args) == 2);
+	DeparseAssert(list_length(aggr_args) == 2);
 
 	ListCell *lc = NULL;
 	List *args = linitial(aggr_args);
@@ -1154,7 +1154,7 @@ static void deparseOptTemp(StringInfo str, char relpersistence)
 			appendStringInfoString(str, "TEMPORARY ");
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 }
@@ -1212,7 +1212,7 @@ static void deparseFdwOptions(StringInfo str, List *fdw_options)
 		}
 		else
 		{
-			Assert(false);
+			DeparseAssert(false);
 		}
 
 		if (lnext(fdw_options, lc))
@@ -1268,7 +1268,7 @@ static void deparseOptBoolean(StringInfo str, Node *node)
 			appendStringInfo(str, " %s", boolVal(node) ? "TRUE" : "FALSE");
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 }
@@ -1302,7 +1302,7 @@ bool optBooleanValue(Node *node)
 		case T_Boolean:
 			return boolVal(node);
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			return false;
 	}
 }
@@ -1335,11 +1335,11 @@ static void deparseVarList(StringInfo str, List *l)
 			else if (IsA(&a_const->val, String))
 				deparseOptBooleanOrString(str, strVal(&a_const->val));
 			else
-				Assert(false);
+				DeparseAssert(false);
 		}
 		else
 		{
-			Assert(false);
+			DeparseAssert(false);
 		}
 
 		if (lnext(l, lc))
@@ -1369,7 +1369,7 @@ static void deparseTransactionModeList(StringInfo str, List *l)
 			else if (strcmp(s, "serializable") == 0)
 				appendStringInfoString(str, "SERIALIZABLE");
 			else
-				Assert(false);
+				DeparseAssert(false);
 		}
 		else if (strcmp(def_elem->defname, "transaction_read_only") == 0 && intVal(&castNode(A_Const, def_elem->arg)->val) == 1)
 		{
@@ -1389,7 +1389,7 @@ static void deparseTransactionModeList(StringInfo str, List *l)
 		}
 		else
 		{
-			Assert(false);
+			DeparseAssert(false);
 		}
 
 		if (lnext(l, lc))
@@ -1422,7 +1422,7 @@ static void deparseAlterIdentityColumnOptionList(StringInfo str, List *l)
 			else if (intVal(def_elem->arg) == ATTRIBUTE_IDENTITY_BY_DEFAULT)
 				appendStringInfoString(str, "BY DEFAULT");
 			else
-				Assert(false);
+				DeparseAssert(false);
 		}
 		else
 		{
@@ -1510,7 +1510,7 @@ static void deparseInsertColumnList(StringInfo str, List *l)
 	foreach(lc, l)
 	{
 		ResTarget *res_target = castNode(ResTarget, lfirst(lc));
-		Assert(res_target->name != NULL);
+		DeparseAssert(res_target->name != NULL);
 		appendStringInfoString(str, quote_identifier(res_target->name));
 		deparseOptIndirection(str, res_target->indirection, 0);
 		if (lnext(l, lc))
@@ -1526,7 +1526,7 @@ static void deparseXmlAttributeList(StringInfo str, List *l)
 	foreach(lc, l)
 	{
 		ResTarget *res_target = castNode(ResTarget, lfirst(lc));
-		Assert(res_target->val != NULL);
+		DeparseAssert(res_target->val != NULL);
 
 		deparseExpr(str, res_target->val);
 
@@ -1549,7 +1549,7 @@ static void deparseXmlNamespaceList(StringInfo str, List *l)
 	foreach(lc, l)
 	{
 		ResTarget *res_target = castNode(ResTarget, lfirst(lc));
-		Assert(res_target->val != NULL);
+		DeparseAssert(res_target->val != NULL);
 
 		if (res_target->name == NULL)
 			appendStringInfoString(str, "DEFAULT ");
@@ -1591,7 +1591,7 @@ static void deparseTableRef(StringInfo str, Node *node)
 			deparseJoinExpr(str, castNode(JoinExpr, node));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -1654,7 +1654,7 @@ static void deparseGroupByList(StringInfo str, List *l)
 // "set_target" in gram.y
 static void deparseSetTarget(StringInfo str, ResTarget *res_target)
 {
-	Assert(res_target->name != NULL);
+	DeparseAssert(res_target->name != NULL);
 	deparseColId(str, res_target->name);
 	deparseOptIndirection(str, res_target->indirection, 0);
 }
@@ -1729,7 +1729,7 @@ static void deparseSetClauseList(StringInfo str, List *target_list)
 	ListCell *lc2;
 	int skip_next_n_elems = 0;
 
-	Assert(list_length(target_list) > 0);
+	DeparseAssert(list_length(target_list) > 0);
 
 	foreach(lc, target_list)
 	{
@@ -1743,7 +1743,7 @@ static void deparseSetClauseList(StringInfo str, List *target_list)
 			appendStringInfoString(str, ", ");
 
 		ResTarget *res_target = castNode(ResTarget, lfirst(lc));
-		Assert(res_target->val != NULL);
+		DeparseAssert(res_target->val != NULL);
 
 		if (IsA(res_target->val, MultiAssignRef))
 		{
@@ -1797,7 +1797,7 @@ static void deparseFuncExprWindowless(StringInfo str, Node* node)
 			deparseXmlSerialize(str, castNode(XmlSerialize, node));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -1843,7 +1843,7 @@ static void deparseIndexElem(StringInfo str, IndexElem* index_elem)
 	}
 	else
 	{
-		Assert(false);
+		DeparseAssert(false);
 	}
 
 	deparseOptCollate(str, index_elem->collation);
@@ -1871,7 +1871,7 @@ static void deparseIndexElem(StringInfo str, IndexElem* index_elem)
 			break;
 		case SORTBY_USING:
 			// Not allowed in CREATE INDEX
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -1982,7 +1982,7 @@ static void deparsePrivilegeTarget(StringInfo str, GrantTargetType targtype, Obj
 					break;
 				default:
 					// Other types are not supported here
-					Assert(false);
+					DeparseAssert(false);
 					break;
 			}
 			break;
@@ -2011,7 +2011,7 @@ static void deparsePrivilegeTarget(StringInfo str, GrantTargetType targtype, Obj
 					break;
 				default:
 					// Other types are not supported here
-					Assert(false);
+					DeparseAssert(false);
 					break;
 			}
 			break;
@@ -2035,7 +2035,7 @@ static void deparsePrivilegeTarget(StringInfo str, GrantTargetType targtype, Obj
 					break;
 				default:
 					// Other types are not supported here
-					Assert(false);
+					DeparseAssert(false);
 					break;
 			}
 			break;
@@ -2104,7 +2104,7 @@ static void deparseUtilityOptionList(StringInfo str, List *options)
 				else if (IsA(def_elem->arg, String))
 					deparseOptBooleanOrString(str, strVal(def_elem->arg));
 				else
-					Assert(false);
+					DeparseAssert(false);
 			}
 
 			if (lnext(options, lc))
@@ -2197,7 +2197,7 @@ static void deparseSelectStmt(StringInfo str, SelectStmt *stmt)
 				foreach(lc, stmt->windowClause)
 				{
 					WindowDef *window_def = castNode(WindowDef, lfirst(lc));
-					Assert(window_def->name != NULL);
+					DeparseAssert(window_def->name != NULL);
 					appendStringInfoString(str, window_def->name);
 					appendStringInfoString(str, " AS ");
 					deparseWindowDef(str, window_def);
@@ -2242,7 +2242,7 @@ static void deparseSelectStmt(StringInfo str, SelectStmt *stmt)
 						appendStringInfoString(str, " EXCEPT ");
 						break;
 					default:
-						Assert(false);
+						DeparseAssert(false);
 				}
 				if (stmt->all)
 					appendStringInfoString(str, "ALL ");
@@ -2363,7 +2363,7 @@ static void deparseRangeVar(StringInfo str, RangeVar *range_var, DeparseNodeCont
 		appendStringInfoChar(str, '.');
 	}
 
-	Assert(range_var->relname != NULL);
+	DeparseAssert(range_var->relname != NULL);
 	appendStringInfoString(str, quote_identifier(range_var->relname));
 	appendStringInfoChar(str, ' ');
 
@@ -2409,7 +2409,7 @@ static void deparseFuncCall(StringInfo str, FuncCall *func_call)
 {
 	const ListCell *lc = NULL;
 
-	Assert(list_length(func_call->funcname) > 0);
+	DeparseAssert(list_length(func_call->funcname) > 0);
 
 	if (list_length(func_call->funcname) == 2 &&
 		strcmp(strVal(linitial(func_call->funcname)), "pg_catalog") == 0 &&
@@ -2439,7 +2439,7 @@ static void deparseFuncCall(StringInfo str, FuncCall *func_call)
 		 * "SUBSTRING" is a keyword on its own merit, and only accepts the
 		 * keyword parameter style when its called as a keyword, not as a regular function (i.e. pg_catalog.substring)
 		 */
-		Assert(list_length(func_call->args) == 2 || list_length(func_call->args) == 3);
+		DeparseAssert(list_length(func_call->args) == 2 || list_length(func_call->args) == 3);
 		appendStringInfoString(str, "SUBSTRING(");
 		deparseExpr(str, linitial(func_call->args));
 		appendStringInfoString(str, " FROM ");
@@ -2554,7 +2554,7 @@ static void deparseFuncCall(StringInfo str, FuncCall *func_call)
 		 * keyword parameter style when its called as a keyword, not as a regular function (i.e. pg_catalog.ltrim)
 		 * Note that the first and second arguments are switched in this format
 		 */
-		Assert(list_length(func_call->args) == 1 || list_length(func_call->args) == 2);
+		DeparseAssert(list_length(func_call->args) == 1 || list_length(func_call->args) == 2);
 		appendStringInfoString(str, "TRIM (");
 		if (strcmp(strVal(lsecond(func_call->funcname)), "ltrim") == 0)
 			appendStringInfoString(str, "LEADING ");
@@ -2593,14 +2593,14 @@ static void deparseFuncCall(StringInfo str, FuncCall *func_call)
 		 * "NORMALIZE" is a keyword on its own merit, and only accepts the
 		 * keyword parameter style when its called as a keyword, not as a regular function (i.e. pg_catalog.normalize)
 		 */
-		Assert(list_length(func_call->args) == 1 || list_length(func_call->args) == 2);
+		DeparseAssert(list_length(func_call->args) == 1 || list_length(func_call->args) == 2);
 		appendStringInfoString(str, "normalize (");
 
 		deparseExpr(str, linitial(func_call->args));
 		if (list_length(func_call->args) == 2)
 		{
 			appendStringInfoString(str, ", ");
-			Assert(IsA(lsecond(func_call->args), A_Const));
+			DeparseAssert(IsA(lsecond(func_call->args), A_Const));
 			A_Const *aconst = lsecond(func_call->args);
 			deparseValue(str, &aconst->val, DEPARSE_NODE_CONTEXT_NONE);
 		}
@@ -2615,13 +2615,13 @@ static void deparseFuncCall(StringInfo str, FuncCall *func_call)
 		 * "IS NORMALIZED" is a keyword on its own merit, and only accepts the
 		 * keyword parameter style when its called as a keyword, not as a regular function (i.e. pg_catalog.is_normalized)
 		 */
-		Assert(list_length(func_call->args) == 1 || list_length(func_call->args) == 2);
+		DeparseAssert(list_length(func_call->args) == 1 || list_length(func_call->args) == 2);
 
 		deparseExpr(str, linitial(func_call->args));
 		appendStringInfoString(str, " IS ");
 		if (list_length(func_call->args) == 2)
 		{
-			Assert(IsA(lsecond(func_call->args), A_Const));
+			DeparseAssert(IsA(lsecond(func_call->args), A_Const));
 			A_Const *aconst = lsecond(func_call->args);
 			deparseValue(str, &aconst->val, DEPARSE_NODE_CONTEXT_NONE);
 		}
@@ -2741,7 +2741,7 @@ static void deparseWindowDef(StringInfo str, WindowDef* window_def)
 		}
 		else if (window_def->frameOptions & FRAMEOPTION_START_UNBOUNDED_FOLLOWING)
 		{
-			Assert(false); // disallowed
+			DeparseAssert(false); // disallowed
 		}
 		else if (window_def->frameOptions & FRAMEOPTION_START_CURRENT_ROW)
 		{
@@ -2749,13 +2749,13 @@ static void deparseWindowDef(StringInfo str, WindowDef* window_def)
 		}
 		else if (window_def->frameOptions & FRAMEOPTION_START_OFFSET_PRECEDING)
 		{
-			Assert(window_def->startOffset != NULL);
+			DeparseAssert(window_def->startOffset != NULL);
 			deparseExpr(str, window_def->startOffset);
 			appendStringInfoString(str, " PRECEDING ");
 		}
 		else if (window_def->frameOptions & FRAMEOPTION_START_OFFSET_FOLLOWING)
 		{
-			Assert(window_def->startOffset != NULL);
+			DeparseAssert(window_def->startOffset != NULL);
 			deparseExpr(str, window_def->startOffset);
 			appendStringInfoString(str, " FOLLOWING ");
 		}
@@ -2767,7 +2767,7 @@ static void deparseWindowDef(StringInfo str, WindowDef* window_def)
 			// frame_end
 			if (window_def->frameOptions & FRAMEOPTION_END_UNBOUNDED_PRECEDING)
 			{
-				Assert(false); // disallowed
+				DeparseAssert(false); // disallowed
 			}
 			else if (window_def->frameOptions & FRAMEOPTION_END_UNBOUNDED_FOLLOWING)
 			{
@@ -2779,13 +2779,13 @@ static void deparseWindowDef(StringInfo str, WindowDef* window_def)
 			}
 			else if (window_def->frameOptions & FRAMEOPTION_END_OFFSET_PRECEDING)
 			{
-				Assert(window_def->endOffset != NULL);
+				DeparseAssert(window_def->endOffset != NULL);
 				deparseExpr(str, window_def->endOffset);
 				appendStringInfoString(str, " PRECEDING ");
 			}
 			else if (window_def->frameOptions & FRAMEOPTION_END_OFFSET_FOLLOWING)
 			{
-				Assert(window_def->endOffset != NULL);
+				DeparseAssert(window_def->endOffset != NULL);
 				deparseExpr(str, window_def->endOffset);
 				appendStringInfoString(str, " FOLLOWING ");
 			}
@@ -2805,7 +2805,7 @@ static void deparseWindowDef(StringInfo str, WindowDef* window_def)
 
 static void deparseColumnRef(StringInfo str, ColumnRef* column_ref)
 {
-	Assert(list_length(column_ref->fields) >= 1);
+	DeparseAssert(list_length(column_ref->fields) >= 1);
 
 	if (IsA(linitial(column_ref->fields), A_Star))
 		deparseAStar(str, castNode(A_Star, linitial(column_ref->fields)));
@@ -2849,7 +2849,7 @@ static void deparseSubLink(StringInfo str, SubLink* sub_link)
 			return;
 		case ROWCOMPARE_SUBLINK:
 			// Not present in raw parse trees
-			Assert(false);
+			DeparseAssert(false);
 			return;
 		case EXPR_SUBLINK:
 			appendStringInfoString(str, "(");
@@ -2858,7 +2858,7 @@ static void deparseSubLink(StringInfo str, SubLink* sub_link)
 			return;
 		case MULTIEXPR_SUBLINK:
 			// Not present in raw parse trees
-			Assert(false);
+			DeparseAssert(false);
 			return;
 		case ARRAY_SUBLINK:
 			appendStringInfoString(str, "ARRAY(");
@@ -2867,7 +2867,7 @@ static void deparseSubLink(StringInfo str, SubLink* sub_link)
 			return;
 		case CTE_SUBLINK: /* for SubPlans only */
 			// Not present in raw parse trees
-			Assert(false);
+			DeparseAssert(false);
 			return;
 	}
 }
@@ -2928,9 +2928,9 @@ static void deparseAExpr(StringInfo str, A_Expr* a_expr, DeparseNodeContext cont
 			appendStringInfoChar(str, ')');
 			return;
 		case AEXPR_DISTINCT: /* IS DISTINCT FROM - name must be "=" */
-			Assert(list_length(a_expr->name) == 1);
-			Assert(IsA(linitial(a_expr->name), String));
-			Assert(strcmp(strVal(linitial(a_expr->name)), "=") == 0);
+			DeparseAssert(list_length(a_expr->name) == 1);
+			DeparseAssert(IsA(linitial(a_expr->name), String));
+			DeparseAssert(strcmp(strVal(linitial(a_expr->name)), "=") == 0);
 
 			if (need_lexpr_parens)
 				appendStringInfoChar(str, '(');
@@ -2945,18 +2945,18 @@ static void deparseAExpr(StringInfo str, A_Expr* a_expr, DeparseNodeContext cont
 				appendStringInfoChar(str, ')');
 			return;
 		case AEXPR_NOT_DISTINCT: /* IS NOT DISTINCT FROM - name must be "=" */
-			Assert(list_length(a_expr->name) == 1);
-			Assert(IsA(linitial(a_expr->name), String));
-			Assert(strcmp(strVal(linitial(a_expr->name)), "=") == 0);
+			DeparseAssert(list_length(a_expr->name) == 1);
+			DeparseAssert(IsA(linitial(a_expr->name), String));
+			DeparseAssert(strcmp(strVal(linitial(a_expr->name)), "=") == 0);
 
 			deparseExpr(str, a_expr->lexpr);
 			appendStringInfoString(str, " IS NOT DISTINCT FROM ");
 			deparseExpr(str, a_expr->rexpr);
 			return;
 		case AEXPR_NULLIF: /* NULLIF - name must be "=" */
-			Assert(list_length(a_expr->name) == 1);
-			Assert(IsA(linitial(a_expr->name), String));
-			Assert(strcmp(strVal(linitial(a_expr->name)), "=") == 0);
+			DeparseAssert(list_length(a_expr->name) == 1);
+			DeparseAssert(IsA(linitial(a_expr->name), String));
+			DeparseAssert(strcmp(strVal(linitial(a_expr->name)), "=") == 0);
 
 			appendStringInfoString(str, "NULLIF(");
 			deparseExpr(str, a_expr->lexpr);
@@ -2965,9 +2965,9 @@ static void deparseAExpr(StringInfo str, A_Expr* a_expr, DeparseNodeContext cont
 			appendStringInfoChar(str, ')');
 			return;
 		case AEXPR_IN: /* [NOT] IN - name must be "=" or "<>" */
-			Assert(list_length(a_expr->name) == 1);
-			Assert(IsA(linitial(a_expr->name), String));
-			Assert(IsA(a_expr->rexpr, List));
+			DeparseAssert(list_length(a_expr->name) == 1);
+			DeparseAssert(IsA(linitial(a_expr->name), String));
+			DeparseAssert(IsA(a_expr->rexpr, List));
 			deparseExpr(str, a_expr->lexpr);
 			appendStringInfoChar(str, ' ');
 			name = ((union ValUnion *) linitial(a_expr->name))->sval.sval;
@@ -2976,7 +2976,7 @@ static void deparseAExpr(StringInfo str, A_Expr* a_expr, DeparseNodeContext cont
 			} else if (strcmp(name, "<>") == 0) {
 				appendStringInfoString(str, "NOT IN ");
 			} else {
-				Assert(false);
+				DeparseAssert(false);
 			}
 			appendStringInfoChar(str, '(');
 			if (IsA(a_expr->rexpr, SubLink))
@@ -2986,8 +2986,8 @@ static void deparseAExpr(StringInfo str, A_Expr* a_expr, DeparseNodeContext cont
 			appendStringInfoChar(str, ')');
 			return;
 		case AEXPR_LIKE: /* [NOT] LIKE - name must be "~~" or "!~~" */
-			Assert(list_length(a_expr->name) == 1);
-			Assert(IsA(linitial(a_expr->name), String));
+			DeparseAssert(list_length(a_expr->name) == 1);
+			DeparseAssert(IsA(linitial(a_expr->name), String));
 			deparseExpr(str, a_expr->lexpr);
 			appendStringInfoChar(str, ' ');
 
@@ -2997,14 +2997,14 @@ static void deparseAExpr(StringInfo str, A_Expr* a_expr, DeparseNodeContext cont
 			} else if (strcmp(name, "!~~") == 0) {
 				appendStringInfoString(str, "NOT LIKE ");
 			} else {
-				Assert(false);
+				DeparseAssert(false);
 			}
 
 			deparseExpr(str, a_expr->rexpr);
 			return;
 		case AEXPR_ILIKE: /* [NOT] ILIKE - name must be "~~*" or "!~~*" */
-			Assert(list_length(a_expr->name) == 1);
-			Assert(IsA(linitial(a_expr->name), String));
+			DeparseAssert(list_length(a_expr->name) == 1);
+			DeparseAssert(IsA(linitial(a_expr->name), String));
 			deparseExpr(str, a_expr->lexpr);
 			appendStringInfoChar(str, ' ');
 
@@ -3014,14 +3014,14 @@ static void deparseAExpr(StringInfo str, A_Expr* a_expr, DeparseNodeContext cont
 			} else if (strcmp(name, "!~~*") == 0) {
 				appendStringInfoString(str, "NOT ILIKE ");
 			} else {
-				Assert(false);
+				DeparseAssert(false);
 			}
 
 			deparseExpr(str, a_expr->rexpr);
 			return;
 		case AEXPR_SIMILAR: /* [NOT] SIMILAR - name must be "~" or "!~" */
-			Assert(list_length(a_expr->name) == 1);
-			Assert(IsA(linitial(a_expr->name), String));
+			DeparseAssert(list_length(a_expr->name) == 1);
+			DeparseAssert(IsA(linitial(a_expr->name), String));
 			deparseExpr(str, a_expr->lexpr);
 			appendStringInfoChar(str, ' ');
 
@@ -3031,14 +3031,14 @@ static void deparseAExpr(StringInfo str, A_Expr* a_expr, DeparseNodeContext cont
 			} else if (strcmp(name, "!~") == 0) {
 				appendStringInfoString(str, "NOT SIMILAR TO ");
 			} else {
-				Assert(false);
+				DeparseAssert(false);
 			}
 
 			FuncCall *n = castNode(FuncCall, a_expr->rexpr);
-			Assert(list_length(n->funcname) == 2);
-			Assert(strcmp(strVal(linitial(n->funcname)), "pg_catalog") == 0);
-			Assert(strcmp(strVal(lsecond(n->funcname)), "similar_to_escape") == 0);
-			Assert(list_length(n->args) == 1 || list_length(n->args) == 2);
+			DeparseAssert(list_length(n->funcname) == 2);
+			DeparseAssert(strcmp(strVal(linitial(n->funcname)), "pg_catalog") == 0);
+			DeparseAssert(strcmp(strVal(lsecond(n->funcname)), "similar_to_escape") == 0);
+			DeparseAssert(list_length(n->args) == 1 || list_length(n->args) == 2);
 
 			deparseExpr(str, linitial(n->args));
 			if (list_length(n->args) == 2)
@@ -3052,9 +3052,9 @@ static void deparseAExpr(StringInfo str, A_Expr* a_expr, DeparseNodeContext cont
 		case AEXPR_NOT_BETWEEN: /* name must be "NOT BETWEEN" */
 		case AEXPR_BETWEEN_SYM: /* name must be "BETWEEN SYMMETRIC" */
 		case AEXPR_NOT_BETWEEN_SYM: /* name must be "NOT BETWEEN SYMMETRIC" */
-			Assert(list_length(a_expr->name) == 1);
-			Assert(IsA(linitial(a_expr->name), String));
-			Assert(IsA(a_expr->rexpr, List));
+			DeparseAssert(list_length(a_expr->name) == 1);
+			DeparseAssert(IsA(linitial(a_expr->name), String));
+			DeparseAssert(IsA(a_expr->rexpr, List));
 
 			deparseExpr(str, a_expr->lexpr);
 			appendStringInfoChar(str, ' ');
@@ -3112,7 +3112,7 @@ static void deparseBoolExpr(StringInfo str, BoolExpr *bool_expr)
 			}
 			return;
 		case NOT_EXPR:
-			Assert(list_length(bool_expr->args) == 1);
+			DeparseAssert(list_length(bool_expr->args) == 1);
 			bool need_parens = IsA(linitial(bool_expr->args), BoolExpr) && (castNode(BoolExpr, linitial(bool_expr->args))->boolop == AND_EXPR || castNode(BoolExpr, linitial(bool_expr->args))->boolop == OR_EXPR);
 			appendStringInfoString(str, "NOT ");
 			if (need_parens)
@@ -3301,7 +3301,7 @@ static void deparseJoinExpr(StringInfo str, JoinExpr *join_expr)
 		case JOIN_UNIQUE_OUTER:
 		case JOIN_UNIQUE_INNER:
 			// Only used by the planner/executor, not seen in parser output
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 	
@@ -3451,7 +3451,7 @@ static void deparseRangeFunction(StringInfo str, RangeFunction *range_func)
 		foreach(lc, range_func->functions)
 		{
 			List *lfunc = castNode(List, lfirst(lc));
-			Assert(list_length(lfunc) == 2);
+			DeparseAssert(list_length(lfunc) == 2);
 			deparseFuncExprWindowless(str, linitial(lfunc));
 			appendStringInfoChar(str, ' ');
 			List *coldeflist = castNode(List, lsecond(lfunc));
@@ -3473,7 +3473,7 @@ static void deparseRangeFunction(StringInfo str, RangeFunction *range_func)
 	}
 	else
 	{
-		Assert(list_length(linitial(range_func->functions)) == 2);
+		DeparseAssert(list_length(linitial(range_func->functions)) == 2);
 		deparseFuncExprWindowless(str, linitial(linitial(range_func->functions)));
 	}
 	appendStringInfoChar(str, ' ');
@@ -3525,7 +3525,7 @@ static void deparseRowExpr(StringInfo str, RowExpr *row_expr)
 		case COERCE_SQL_SYNTAX:
 		case COERCE_EXPLICIT_CAST:
 			// Not present in raw parser output
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case COERCE_IMPLICIT_CAST:
 			// No prefix
@@ -3541,7 +3541,7 @@ static void deparseTypeCast(StringInfo str, TypeCast *type_cast)
 {
 	bool need_parens = false;
 
-	Assert(type_cast->typeName != NULL);
+	DeparseAssert(type_cast->typeName != NULL);
 
 	if (IsA(type_cast->arg, A_Expr))
 	{
@@ -3709,8 +3709,8 @@ static void deparseTypeName(StringInfo str, TypeName *type_name)
 		}
 		else if (strcmp(name, "interval") == 0 && list_length(type_name->typmods) >= 1)
 		{
-			Assert(IsA(linitial(type_name->typmods), A_Const));
-			Assert(IsA(&castNode(A_Const, linitial(type_name->typmods))->val, Integer));
+			DeparseAssert(IsA(linitial(type_name->typmods), A_Const));
+			DeparseAssert(IsA(&castNode(A_Const, linitial(type_name->typmods))->val, Integer));
 
 			int fields = intVal(&castNode(A_Const, linitial(type_name->typmods))->val);
 
@@ -3762,7 +3762,7 @@ static void deparseTypeName(StringInfo str, TypeName *type_name)
 					// Nothing
 					break;
 				default:
-					Assert(false);
+					DeparseAssert(false);
 					break;
 			}
 
@@ -3798,7 +3798,7 @@ static void deparseTypeName(StringInfo str, TypeName *type_name)
 			else if (IsA(lfirst(lc), ColumnRef))
 				deparseColumnRef(str, lfirst(lc));
 			else
-				Assert(false);
+				DeparseAssert(false);
 
 			if (lnext(type_name->typmods, lc))
 				appendStringInfoString(str, ", ");
@@ -3821,7 +3821,7 @@ static void deparseTypeName(StringInfo str, TypeName *type_name)
 static void deparseNullTest(StringInfo str, NullTest *null_test)
 {
 	// argisrow is always false in raw parser output
-	Assert(null_test->argisrow == false);
+	DeparseAssert(null_test->argisrow == false);
 
 	deparseExpr(str, (Node *) null_test->arg);
 	switch (null_test->nulltesttype)
@@ -3951,7 +3951,7 @@ static void deparseBooleanTest(StringInfo str, BooleanTest *boolean_test)
 			appendStringInfoString(str, " IS NOT UNKNOWN");
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -4106,7 +4106,7 @@ static void deparseOnConflictClause(StringInfo str, OnConflictClause *on_conflic
 	switch (on_conflict_clause->action)
 	{
 		case ONCONFLICT_NONE:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case ONCONFLICT_NOTHING:
 			appendStringInfoString(str, "DO NOTHING ");
@@ -4285,7 +4285,7 @@ static void deparseLockingClause(StringInfo str, LockingClause *locking_clause)
 	{
 		case LCS_NONE:
 			/* no such clause - only used in PlanRowMark */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case LCS_FORKEYSHARE:
 			appendStringInfoString(str, "FOR KEY SHARE ");
@@ -4364,7 +4364,7 @@ static void deparseCreateCastStmt(StringInfo str, CreateCastStmt *create_cast_st
 			break;
 		case COERCION_PLPGSQL:
 			// Not present in raw parser output
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case COERCION_EXPLICIT:
 			// Default
@@ -4465,7 +4465,7 @@ static void deparseCreateOpClassItem(StringInfo str, CreateOpClassItem *create_o
 			deparseTypeName(str, create_op_class_item->storedtype);
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -4503,7 +4503,7 @@ static void deparseCreateDomainStmt(StringInfo str, CreateDomainStmt *create_dom
 {
 	ListCell *lc;
 
-	Assert(create_domain_stmt->typeName != NULL);
+	DeparseAssert(create_domain_stmt->typeName != NULL);
 
 	appendStringInfoString(str, "CREATE DOMAIN ");
 	deparseAnyName(str, create_domain_stmt->domainname);
@@ -4559,7 +4559,7 @@ static void deparseCreateExtensionStmt(StringInfo str, CreateExtensionStmt *crea
 		}
 		else
 		{
-			Assert(false);
+			DeparseAssert(false);
 		}
 
 		appendStringInfoChar(str, ' ');
@@ -4601,13 +4601,13 @@ static void deparseConstraint(StringInfo str, Constraint *constraint)
 					appendStringInfoString(str, "BY DEFAULT ");
 					break;
 				default:
-					Assert(false);
+					DeparseAssert(false);
 			}
 			appendStringInfoString(str, "AS IDENTITY ");
 			deparseOptParenthesizedSeqOptList(str, constraint->options);
 			break;
 		case CONSTR_GENERATED:
-			Assert(constraint->generated_when == ATTRIBUTE_IDENTITY_ALWAYS);
+			DeparseAssert(constraint->generated_when == ATTRIBUTE_IDENTITY_ALWAYS);
 			appendStringInfoString(str, "GENERATED ALWAYS AS (");
 			deparseExpr(str, constraint->raw_expr);
 			appendStringInfoString(str, ") STORED ");
@@ -4635,7 +4635,7 @@ static void deparseConstraint(StringInfo str, Constraint *constraint)
 			foreach(lc, constraint->exclusions)
 			{
 				List *exclusion = castNode(List, lfirst(lc));
-				Assert(list_length(exclusion) == 2);
+				DeparseAssert(list_length(exclusion) == 2);
 				deparseIndexElem(str, castNode(IndexElem, linitial(exclusion)));
 				appendStringInfoString(str, " WITH ");
 				deparseAnyOperator(str, castNode(List, lsecond(exclusion)));
@@ -4705,7 +4705,7 @@ static void deparseConstraint(StringInfo str, Constraint *constraint)
 			break;
 		case FKCONSTR_MATCH_PARTIAL:
 			// Not implemented in Postgres
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		default:
 			// Not specified
@@ -4905,7 +4905,7 @@ static void deparseFunctionParameter(StringInfo str, FunctionParameter *function
 			// Default
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -5011,7 +5011,7 @@ static void deparseRoleSpec(StringInfo str, RoleSpec *role_spec)
 	switch (role_spec->roletype)
 	{
 		case ROLESPEC_CSTRING:
-			Assert(role_spec->rolename != NULL);
+			DeparseAssert(role_spec->rolename != NULL);
 			appendStringInfoString(str, quote_identifier(role_spec->rolename));
 			break;
 		case ROLESPEC_CURRENT_ROLE:
@@ -5099,7 +5099,7 @@ static void deparsePartitionBoundSpec(StringInfo str, PartitionBoundSpec *partit
 			appendStringInfoChar(str, ')');
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 }
@@ -5132,7 +5132,7 @@ static void deparseTableElement(StringInfo str, Node *node)
 			deparseConstraint(str, castNode(Constraint, node));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -5164,7 +5164,7 @@ static void deparseCreateStmt(StringInfo str, CreateStmt *create_stmt, bool is_f
 
 	if (create_stmt->partbound != NULL)
 	{
-		Assert(list_length(create_stmt->inhRelations) == 1);
+		DeparseAssert(list_length(create_stmt->inhRelations) == 1);
 		appendStringInfoString(str, "PARTITION OF ");
 		deparseRangeVar(str, castNode(RangeVar, linitial(create_stmt->inhRelations)), DEPARSE_NODE_CONTEXT_NONE);
 		appendStringInfoChar(str, ' ');
@@ -5491,7 +5491,7 @@ static void deparseSecLabelStmt(StringInfo str, SecLabelStmt *sec_label_stmt)
 			break;
 		default:
 			// Not supported in the parser
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -5573,7 +5573,7 @@ static void deparseCreateTableAsStmt(StringInfo str, CreateTableAsStmt *create_t
 			break;
 		default:
 			// Not supported here
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -5756,7 +5756,7 @@ static void deparseDropStmt(StringInfo str, DropStmt *drop_stmt)
 			break;
 		default:
 			// Other object types are not supported here in the parser
-			Assert(false);
+			DeparseAssert(false);
 	}
 
 	if (drop_stmt->concurrent)
@@ -5799,7 +5799,7 @@ static void deparseDropStmt(StringInfo str, DropStmt *drop_stmt)
 		case OBJECT_POLICY:
 		case OBJECT_RULE:
 		case OBJECT_TRIGGER:
-			Assert(list_length(drop_stmt->objects) == 1);
+			DeparseAssert(list_length(drop_stmt->objects) == 1);
 			l = linitial(drop_stmt->objects);
 			deparseColId(str, strVal(llast(l)));
 			appendStringInfoString(str, " ON ");
@@ -5807,9 +5807,9 @@ static void deparseDropStmt(StringInfo str, DropStmt *drop_stmt)
 			appendStringInfoChar(str, ' ');
 			break;
 		case OBJECT_CAST:
-			Assert(list_length(drop_stmt->objects) == 1);
+			DeparseAssert(list_length(drop_stmt->objects) == 1);
 			l = linitial(drop_stmt->objects);
-			Assert(list_length(l) == 2);
+			DeparseAssert(list_length(l) == 2);
 			appendStringInfoChar(str, '(');
 			deparseTypeName(str, castNode(TypeName, linitial(l)));
 			appendStringInfoString(str, " AS ");
@@ -5819,7 +5819,7 @@ static void deparseDropStmt(StringInfo str, DropStmt *drop_stmt)
 			break;
 		case OBJECT_OPFAMILY:
 		case OBJECT_OPCLASS:
-			Assert(list_length(drop_stmt->objects) == 1);
+			DeparseAssert(list_length(drop_stmt->objects) == 1);
 			l = linitial(drop_stmt->objects);
 			deparseAnyNameSkipFirst(str, l);
 			appendStringInfoString(str, " USING ");
@@ -5827,7 +5827,7 @@ static void deparseDropStmt(StringInfo str, DropStmt *drop_stmt)
 			appendStringInfoChar(str, ' ');
 			break;
 		case OBJECT_TRANSFORM:
-			Assert(list_length(drop_stmt->objects) == 1);
+			DeparseAssert(list_length(drop_stmt->objects) == 1);
 			l = linitial(drop_stmt->objects);
 			appendStringInfoString(str, "FOR ");
 			deparseTypeName(str, castNode(TypeName, linitial(l)));
@@ -5879,7 +5879,7 @@ static void deparseDropStmt(StringInfo str, DropStmt *drop_stmt)
 			appendStringInfoChar(str, ' ');
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 
 	deparseOptDropBehavior(str, drop_stmt->behavior);
@@ -5896,7 +5896,7 @@ static void deparseGroupingSet(StringInfo str, GroupingSet *grouping_set)
 			break;
 		case GROUPING_SET_SIMPLE:
 			// Not present in raw parse trees
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case GROUPING_SET_ROLLUP:
 			appendStringInfoString(str, "ROLLUP (");
@@ -5960,7 +5960,7 @@ static void deparseAlterObjectDependsStmt(StringInfo str, AlterObjectDependsStmt
 			break;
 		default:
 			// No other object types supported here
-			Assert(false);
+			DeparseAssert(false);
 	}
 	appendStringInfoChar(str, ' ');
 
@@ -6084,7 +6084,7 @@ static void deparseAlterObjectSchemaStmt(StringInfo str, AlterObjectSchemaStmt *
 			deparseAnyName(str, castNode(List, alter_object_schema_stmt->object));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -6107,11 +6107,11 @@ static void deparseAlterTableCmd(StringInfo str, AlterTableCmd *alter_table_cmd,
 				appendStringInfoString(str, "ADD COLUMN ");
 			break;
 		case AT_AddColumnRecurse: /* internal to commands/tablecmds.c */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_AddColumnToView: /* implicitly via CREATE OR REPLACE VIEW */
 			// Not present in raw parser output
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_ColumnDefault: /* alter column default */
 			appendStringInfoString(str, "ALTER COLUMN ");
@@ -6122,7 +6122,7 @@ static void deparseAlterTableCmd(StringInfo str, AlterTableCmd *alter_table_cmd,
 			break;
 		case AT_CookedColumnDefault: /* add a pre-cooked column default */
 			// Not present in raw parser output
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_DropNotNull: /* alter column drop not null */
 			appendStringInfoString(str, "ALTER COLUMN ");
@@ -6139,7 +6139,7 @@ static void deparseAlterTableCmd(StringInfo str, AlterTableCmd *alter_table_cmd,
 			break;
 		case AT_CheckNotNull: /* check column is already marked not null */
 			// Not present in raw parser output
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_SetStatistics: /* alter column set statistics */
 			appendStringInfoString(str, "ALTER COLUMN ");
@@ -6168,25 +6168,25 @@ static void deparseAlterTableCmd(StringInfo str, AlterTableCmd *alter_table_cmd,
 				appendStringInfoString(str, "DROP ");
 			break;
 		case AT_DropColumnRecurse: /* internal to commands/tablecmds.c */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_AddIndex: /* add index */
 			appendStringInfoString(str, "ADD INDEX ");
 			break;
 		case AT_ReAddIndex: /* internal to commands/tablecmds.c */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_AddConstraint: /* add constraint */
 			appendStringInfoString(str, "ADD ");
 			break;
 		case AT_AddConstraintRecurse: /* internal to commands/tablecmds.c */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_ReAddConstraint: /* internal to commands/tablecmds.c */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_ReAddDomainConstraint: /* internal to commands/tablecmds.c */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_AlterConstraint: /* alter constraint */
 			appendStringInfoString(str, "ALTER "); // CONSTRAINT keyword gets added by the Constraint itself (when deparsing def)
@@ -6195,21 +6195,21 @@ static void deparseAlterTableCmd(StringInfo str, AlterTableCmd *alter_table_cmd,
 			appendStringInfoString(str, "VALIDATE CONSTRAINT ");
 			break;
 		case AT_ValidateConstraintRecurse: /* internal to commands/tablecmds.c */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_AddIndexConstraint: /* add constraint using existing index */
 			// Not present in raw parser output
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_DropConstraint: /* drop constraint */
 			appendStringInfoString(str, "DROP CONSTRAINT ");
 			break;
 		case AT_DropConstraintRecurse: /* internal to commands/tablecmds.c */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_ReAddComment: /* internal to commands/tablecmds.c */
 		case AT_ReAddStatistics: /* internal to commands/tablecmds.c */
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_AlterColumnType: /* alter column type */
 			if (context == DEPARSE_NODE_CONTEXT_ALTER_TYPE)
@@ -6255,7 +6255,7 @@ static void deparseAlterTableCmd(StringInfo str, AlterTableCmd *alter_table_cmd,
 			break;
 		case AT_ReplaceRelOptions: /* replace reloption list in its entirety */
 			// Not present in raw parser output
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case AT_EnableTrig: /* ENABLE TRIGGER name */
 			appendStringInfoString(str, "ENABLE TRIGGER ");
@@ -6447,7 +6447,7 @@ static void deparseAlterTableCmd(StringInfo str, AlterTableCmd *alter_table_cmd,
 			appendStringInfoChar(str, ' ');
 			break;
 		default:
-			Assert(alter_table_cmd->def == NULL);
+			DeparseAssert(alter_table_cmd->def == NULL);
 			break;
 	}
 
@@ -6483,7 +6483,7 @@ static DeparseNodeContext deparseAlterTableObjType(StringInfo str, ObjectType ty
 			return DEPARSE_NODE_CONTEXT_ALTER_TYPE;
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -6594,7 +6594,7 @@ static void deparseAlterDomainStmt(StringInfo str, AlterDomainStmt *alter_domain
 			break;
 		default:
 			// No other subtypes supported by the parser
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -6681,7 +6681,7 @@ static void deparseRenameStmt(StringInfo str, RenameStmt *rename_stmt)
 					appendStringInfoString(str, "MATERIALIZED VIEW ");
 					break;
 				default:
-					Assert(false);
+					DeparseAssert(false);
 			}
 			break;
 		case OBJECT_SEQUENCE:
@@ -6731,7 +6731,7 @@ static void deparseRenameStmt(StringInfo str, RenameStmt *rename_stmt)
 			appendStringInfoString(str, "TYPE ");
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -6836,7 +6836,7 @@ static void deparseRenameStmt(StringInfo str, RenameStmt *rename_stmt)
 			appendStringInfoChar(str, ' ');
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -6931,7 +6931,7 @@ static void deparseVariableSetStmt(StringInfo str, VariableSetStmt* variable_set
 			appendStringInfoString(str, " FROM CURRENT");
 			break;
 		case VAR_SET_MULTI: /* special case for SET TRANSACTION ... */
-			Assert(variable_set_stmt->name != NULL);
+			DeparseAssert(variable_set_stmt->name != NULL);
 			appendStringInfoString(str, "SET ");
 			if (variable_set_stmt->is_local)
 				appendStringInfoString(str, "LOCAL ");
@@ -6952,7 +6952,7 @@ static void deparseVariableSetStmt(StringInfo str, VariableSetStmt* variable_set
 			}
 			else
 			{
-				Assert(false);
+				DeparseAssert(false);
 			}
 			break;
 		case VAR_RESET: /* RESET var */
@@ -6985,7 +6985,7 @@ static void deparseDropdbStmt(StringInfo str, DropdbStmt *dropdb_stmt)
 			if (strcmp(def_elem->defname, "force") == 0)
 				appendStringInfoString(str, "FORCE");
 			else
-				Assert(false); // Currently there are other supported values
+				DeparseAssert(false); // Currently there are other supported values
 
 			if (lnext(dropdb_stmt->options, lc))
 				appendStringInfoString(str, ", ");
@@ -7010,7 +7010,7 @@ static void deparseVacuumStmt(StringInfo str, VacuumStmt *vacuum_stmt)
 
 	foreach(lc, vacuum_stmt->rels)
 	{
-		Assert(IsA(lfirst(lc), VacuumRelation));
+		DeparseAssert(IsA(lfirst(lc), VacuumRelation));
 		VacuumRelation *rel = castNode(VacuumRelation, lfirst(lc));
 
 		deparseRangeVar(str, rel->relation, DEPARSE_NODE_CONTEXT_NONE);
@@ -7078,7 +7078,7 @@ static void deparseLockStmt(StringInfo str, LockStmt *lock_stmt)
 				appendStringInfoString(str, "ACCESS EXCLUSIVE ");
 				break;
 			default:
-				Assert(false);
+				DeparseAssert(false);
 				break;
 		}
 		appendStringInfoString(str, "MODE ");
@@ -7232,7 +7232,7 @@ static void deparseCopyStmt(StringInfo str, CopyStmt *copy_stmt)
 				else
 				{
 					// This isn't reachable, the conditions here are exactly the same as the first loop above.
-					Assert(false);
+					DeparseAssert(false);
 				}
 			}
 		} else {
@@ -7251,7 +7251,7 @@ static void deparseCopyStmt(StringInfo str, CopyStmt *copy_stmt)
 					else if (strcmp(format, "csv") == 0)
 						appendStringInfoString(str, "CSV");
 					else
-						Assert(false);
+						DeparseAssert(false);
 				}
 				else if (strcmp(def_elem->defname, "freeze") == 0)
 				{
@@ -7298,7 +7298,7 @@ static void deparseCopyStmt(StringInfo str, CopyStmt *copy_stmt)
 					}
 					else
 					{
-						Assert(false);
+						DeparseAssert(false);
 					}
 				}
 				else if (strcmp(def_elem->defname, "force_not_null") == 0)
@@ -7454,7 +7454,7 @@ static void deparseDefineStmt(StringInfo str, DefineStmt *define_stmt)
 			break;
 		default:
 			// This shouldn't happen
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -7478,7 +7478,7 @@ static void deparseDefineStmt(StringInfo str, DefineStmt *define_stmt)
 			deparseAnyName(str, define_stmt->defnames);
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 	appendStringInfoChar(str, ' ');
 
@@ -7597,7 +7597,7 @@ static void deparseAlterExtensionStmt(StringInfo str, AlterExtensionStmt *alter_
 		}
 		else
 		{
-			Assert(false);
+			DeparseAssert(false);
 		}
 		appendStringInfoChar(str, ' ');
 	}
@@ -7617,7 +7617,7 @@ static void deparseAlterExtensionContentsStmt(StringInfo str, AlterExtensionCont
 	else if (alter_extension_contents_stmt->action == -1)
 		appendStringInfoString(str, "DROP ");
 	else
-		Assert(false);
+		DeparseAssert(false);
 
 	switch (alter_extension_contents_stmt->objtype)
 	{
@@ -7707,7 +7707,7 @@ static void deparseAlterExtensionContentsStmt(StringInfo str, AlterExtensionCont
 			break;
 		default:
 			// No other object types are supported here in the parser
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -7741,7 +7741,7 @@ static void deparseAlterExtensionContentsStmt(StringInfo str, AlterExtensionCont
 			break;
 		case OBJECT_CAST:
 			l = castNode(List, alter_extension_contents_stmt->object);
-			Assert(list_length(l) == 2);
+			DeparseAssert(list_length(l) == 2);
 			appendStringInfoChar(str, '(');
 			deparseTypeName(str, castNode(TypeName, linitial(l)));
 			appendStringInfoString(str, " AS ");
@@ -7763,7 +7763,7 @@ static void deparseAlterExtensionContentsStmt(StringInfo str, AlterExtensionCont
 		case OBJECT_OPFAMILY:
 		case OBJECT_OPCLASS:
 			l = castNode(List, alter_extension_contents_stmt->object);
-			Assert(list_length(l) == 2);
+			DeparseAssert(list_length(l) == 2);
 			deparseAnyNameSkipFirst(str, l);
 			appendStringInfoString(str, " USING ");
 			deparseColId(str, strVal(linitial(l)));
@@ -7776,7 +7776,7 @@ static void deparseAlterExtensionContentsStmt(StringInfo str, AlterExtensionCont
 			deparseColId(str, strVal(lsecond(l)));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 }
@@ -8073,7 +8073,7 @@ static void deparseAlterRoleElem(StringInfo str, DefElem *def_elem)
 		}
 		else
 		{
-			Assert(false);
+			DeparseAssert(false);
 		}
 	}
 	else if (strcmp(def_elem->defname, "connectionlimit") == 0)
@@ -8143,7 +8143,7 @@ static void deparseAlterRoleElem(StringInfo str, DefElem *def_elem)
 	}
 	else
 	{
-		Assert(false);
+		DeparseAssert(false);
 	}
 }
 
@@ -8267,7 +8267,7 @@ static void deparseAlterRoleStmt(StringInfo str, AlterRoleStmt *alter_role_stmt)
 		}
 		else
 		{
-			Assert(false);
+			DeparseAssert(false);
 		}
 
 		deparseRoleList(str, castNode(List, castNode(DefElem, linitial(alter_role_stmt->options))->arg));
@@ -8399,7 +8399,7 @@ static void deparseAlterDefaultPrivilegesStmt(StringInfo str, AlterDefaultPrivil
 		else
 		{
 			// No other DefElems are supported
-			Assert(false);
+			DeparseAssert(false);
 		}
 	}
 
@@ -8460,7 +8460,7 @@ static void deparseRuleStmt(StringInfo str, RuleStmt* rule_stmt)
 		case CMD_UTILITY:
 		case CMD_NOTHING:
 			// Not supported here
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case CMD_SELECT:
 			appendStringInfoString(str, "SELECT ");
@@ -8578,7 +8578,7 @@ static void deparseAlterFunctionStmt(StringInfo str, AlterFunctionStmt *alter_fu
 			break;
 		default:
 			// Not supported here
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -8703,7 +8703,7 @@ static void deparseReplicaIdentityStmt(StringInfo str, ReplicaIdentityStmt *repl
 			appendStringInfoString(str, "DEFAULT ");
 			break;
 		case REPLICA_IDENTITY_INDEX:
-			Assert(replica_identity_stmt->name != NULL);
+			DeparseAssert(replica_identity_stmt->name != NULL);
 			appendStringInfoString(str, "USING INDEX ");
 			appendStringInfoString(str, quote_identifier(replica_identity_stmt->name));
 			break;
@@ -8724,7 +8724,7 @@ static void deparseCreatePolicyStmt(StringInfo str, CreatePolicyStmt *create_pol
 		appendStringInfoString(str, "AS RESTRICTIVE ");
 
 	if (strcmp(create_policy_stmt->cmd_name, "all") == 0)
-		Assert(true); // Default
+		DeparseAssert(true); // Default
 	else if (strcmp(create_policy_stmt->cmd_name, "select") == 0)
 		appendStringInfoString(str, "FOR SELECT ");
 	else if (strcmp(create_policy_stmt->cmd_name, "insert") == 0)
@@ -8734,7 +8734,7 @@ static void deparseCreatePolicyStmt(StringInfo str, CreatePolicyStmt *create_pol
 	else if (strcmp(create_policy_stmt->cmd_name, "delete") == 0)
 		appendStringInfoString(str, "FOR DELETE ");
 	else
-		Assert(false);
+		DeparseAssert(false);
 
 	appendStringInfoString(str, "TO ");
 	deparseRoleList(str, create_policy_stmt->roles);
@@ -8901,7 +8901,7 @@ static void deparsePublicationObjectList(StringInfo str, List *pubobjects) {
 				break;
 			case PUBLICATIONOBJ_CONTINUATION:
 				// This should be unreachable, the parser merges these before we can even get here.
-				Assert(false);
+				DeparseAssert(false);
 				break;
 		}
 		
@@ -8964,7 +8964,7 @@ static void deparseAlterPublicationStmt(StringInfo str, AlterPublicationStmt *al
 	}
 	else
 	{
-		Assert(false);
+		DeparseAssert(false);
 	}
 }
 
@@ -9131,7 +9131,7 @@ static void deparseCommentStmt(StringInfo str, CommentStmt *comment_stmt)
 			break;
 		default:
 			// No other cases are supported in the parser
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -9224,7 +9224,7 @@ static void deparseCommentStmt(StringInfo str, CommentStmt *comment_stmt)
 			break;
 		default:
 			// No other cases are supported in the parser
-			Assert(false);
+			DeparseAssert(false);
 			break;
 	}
 
@@ -9498,9 +9498,9 @@ static void deparseAlterSubscriptionStmt(StringInfo str, AlterSubscriptionStmt *
 			deparseOptDefinition(str, alter_subscription_stmt->options);
 			break;
 		case ALTER_SUBSCRIPTION_ENABLED:
-			Assert(list_length(alter_subscription_stmt->options) == 1);
+			DeparseAssert(list_length(alter_subscription_stmt->options) == 1);
 			DefElem *defelem = castNode(DefElem, linitial(alter_subscription_stmt->options));
-			Assert(strcmp(defelem->defname, "enabled") == 0);
+			DeparseAssert(strcmp(defelem->defname, "enabled") == 0);
 			if (optBooleanValue(defelem->arg))
 			{
 				appendStringInfoString(str, " ENABLE ");
@@ -9642,7 +9642,7 @@ static void deparseAlterOwnerStmt(StringInfo str, AlterOwnerStmt *alter_owner_st
 			deparseColId(str, strVal(alter_owner_stmt->object));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 
 	appendStringInfoString(str, " OWNER TO ");
@@ -9753,7 +9753,7 @@ static void deparseCreateTrigStmt(StringInfo str, CreateTrigStmt *create_trig_st
 			appendStringInfoString(str, "INSTEAD OF ");
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 
 	if (TRIGGER_FOR_INSERT(create_trig_stmt->events))
@@ -9883,7 +9883,7 @@ static void deparseXmlExpr(StringInfo str, XmlExpr* xml_expr)
 			appendStringInfoChar(str, ')');
 			break;
 		case IS_XMLPARSE: /* XMLPARSE(text, is_doc, preserve_ws) */
-			Assert(list_length(xml_expr->args) == 2);
+			DeparseAssert(list_length(xml_expr->args) == 2);
 			appendStringInfoString(str, "xmlparse(");
 			switch (xml_expr->xmloption)
 			{
@@ -9894,7 +9894,7 @@ static void deparseXmlExpr(StringInfo str, XmlExpr* xml_expr)
 					appendStringInfoString(str, "content ");
 					break;
 				default:
-					Assert(false);
+					DeparseAssert(false);
 			}
 			deparseExpr(str, linitial(xml_expr->args));
 			appendStringInfoChar(str, ')');
@@ -9927,10 +9927,10 @@ static void deparseXmlExpr(StringInfo str, XmlExpr* xml_expr)
 			break;
 		case IS_XMLSERIALIZE: /* XMLSERIALIZE(is_document, xmlval) */
 			// These are represented as XmlSerialize in raw parse trees
-			Assert(false);
+			DeparseAssert(false);
 			break;
 		case IS_DOCUMENT: /* xmlval IS DOCUMENT */
-			Assert(list_length(xml_expr->args) == 1);
+			DeparseAssert(list_length(xml_expr->args) == 1);
 			deparseExpr(str, linitial(xml_expr->args));
 			appendStringInfoString(str, " IS DOCUMENT");
 			break;
@@ -10025,7 +10025,7 @@ static void deparseXmlSerialize(StringInfo str, XmlSerialize *xml_serialize)
 			appendStringInfoString(str, "content ");
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 	deparseExpr(str, xml_serialize->expr);
 	appendStringInfoString(str, " AS ");
@@ -10100,7 +10100,7 @@ static void deparseValue(StringInfo str, union ValUnion *value, DeparseNodeConte
 			}
 			else
 			{
-				Assert(false);
+				DeparseAssert(false);
 			}
 			break;
 		default:
@@ -10131,7 +10131,7 @@ static void deparsePreparableStmt(StringInfo str, Node *node)
 			deparseMergeStmt(str, castNode(MergeStmt, node));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -10156,7 +10156,7 @@ static void deparseRuleActionStmt(StringInfo str, Node *node)
 			deparseNotifyStmt(str, castNode(NotifyStmt, node));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -10193,7 +10193,7 @@ static void deparseExplainableStmt(StringInfo str, Node *node)
 			deparseMergeStmt(str, castNode(MergeStmt, node));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 
@@ -10221,7 +10221,7 @@ static void deparseSchemaStmt(StringInfo str, Node *node)
 			deparseViewStmt(str, castNode(ViewStmt, node));
 			break;
 		default:
-			Assert(false);
+			DeparseAssert(false);
 	}
 }
 

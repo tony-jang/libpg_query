@@ -878,6 +878,11 @@ typedef NameData *Name;
 
 #endif							/* USE_ASSERT_CHECKING && !FRONTEND */
 
+#define DeparseAssert(condition) \
+    do { \
+        if (!(condition)) \
+            elog(ERROR, "deparse: failed assertion: %s", #condition); \
+	} while (0)
 /*
  * ExceptionalCondition is compiled into the backend whether or not
  * USE_ASSERT_CHECKING is defined, so as to support use of extensions
